@@ -17,7 +17,7 @@ class Graph {
     std::map<std::pair<int, int>, int> edgeCost;
 
     public:
-    Graph() = default;
+    Graph();
     bool isVertex(int who);
     bool addVertex(int who);
     bool isEdge(int from, int to);
@@ -28,6 +28,11 @@ class Graph {
     std::vector<int> getVerticesOut(int from);
     std::vector<int> getVerticesIn(int to);
     [[nodiscard]] GraphIterator iterator() const;
+
+    bool fromFile(const std::string& filename);
+    bool toFile(const std::string& filename);
+
+    void print();
 };
 
 class GraphIterator {

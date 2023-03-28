@@ -7,7 +7,11 @@
 #include <fstream>
 #include "graph.h"
 
-using namespace std;
+Graph::Graph() {
+    this->vertexIn = std::map<int, std::vector<int>>();
+    this->vertexOut = std::map<int, std::vector<int>>();
+    this->edgeCost = std::map<std::pair<int, int>, int>();
+}
 
 // GRAPH
 bool Graph::isVertex(int who) {
@@ -48,8 +52,8 @@ bool Graph::removeEdge(int from, int to) {
 
 bool Graph::removeVertex(int who) {
     if (!isVertex(who)) return false;
-    vector<int> safeCopyIn = vertexIn[who]; // avoid concurrency issues
-    vector<int> safeCopyOut = vertexOut[who];
+    std::vector<int> safeCopyIn = vertexIn[who]; // avoid concurrency issues
+    std::vector<int> safeCopyOut = vertexOut[who];
     for (int i : safeCopyIn) {
         removeEdge(i, who);
     }
@@ -74,6 +78,50 @@ std::vector<int> Graph::getVerticesIn(int to) {
 
 GraphIterator Graph::iterator() const {
     return GraphIterator(*this);
+}
+
+// FILE INTEROP
+
+bool Graph::fromFile(const std::string &filename) {
+    std::ifstream fin(filename);
+    if (fin.fail()) return false;
+
+    int n, m;
+    fin >> n >> m;
+
+    for (int i = 0; i < n; i++) this->addVertex(i);
+
+    for (int i = 0; i < m; i++) {
+        int from, to, cost;
+        fin >> from >> to >> cost;
+        this->addEdge(from, to, cost);
+    }
+
+    return true;
+}
+
+bool Graph::toFile(const std::string &filename) {
+    std::ofstream fout(filename);
+
+    fout << this->vertexIn.size() << " " << this->edgeCost.size() << std::endl;
+
+    for (const auto &edgeCostPair : edgeCost) {
+        auto edge = edgeCostPair.first;
+        auto cost = edgeCostPair.second;
+        fout << edge.first << " " << edge.second << " " << cost << std::endl;
+    }
+
+    return true;
+}
+
+void Graph::print() {
+    unsigned long n = this->vertexIn.size();
+    std::cout << "Vertices: " << n << ", Edges: " << this->edgeCost.size() << std::endl;
+    for (int i = 0; i < n; i++) {
+        for (int j : this->vertexOut[i]) {
+            std::cout << i << " -> " << j << " " << this->edgeCost[std::pair<int, int>(i, j)] << std::endl;
+        }
+    }
 }
 
 // ITERATOR
@@ -116,26 +164,26 @@ void testPrintGraph(Graph* graphRef) {
     iter.first();
     while (iter.valid()) {
         int vertex = iter.getCurrent();
-        cout << "Vertex " << vertex << ";" << endl;
+        std::cout << "Vertex " << vertex << ";" << std::endl;
         //
-        cout << "   IN: ";
+        std::cout << "   IN: ";
         for (int in : graph.getVerticesIn(vertex)) {
-            cout << in << " ";
-        } cout << endl;
+            std::cout << in << " ";
+        } std::cout << std::endl;
         //
-        cout << "   OUT: ";
+        std::cout << "   OUT: ";
         for (int out : graph.getVerticesOut(vertex)) {
-            cout << out << " ";
-        } cout << endl;
+            std::cout << out << " ";
+        } std::cout << std::endl;
         iter.next();
-    } cout << endl;
+    } std::cout << std::endl;
     //
     iter.first();
-    cout << "Edges: "<< endl;
+    std::cout << "Edges: "<< std::endl;
     while (iter.valid()) {
         int vertex = iter.getCurrent();
         for (int out : graph.getVerticesOut(vertex)) {
-            cout << vertex << "->" << out << " (cost: " << graph.getCost(vertex, out) << ")" << endl;
+            std::cout << vertex << "->" << out << " (cost: " << graph.getCost(vertex, out) << ")" << std::endl;
         }
         iter.next();
     }
@@ -162,26 +210,26 @@ void testGraph() {
     iter.first();
     while (iter.valid()) {
         int vertex = iter.getCurrent();
-        cout << "Vertex " << vertex << ";" << endl;
+       std::cout << "Vertex " << vertex << ";" << std::endl;
         //
-        cout << "   IN: ";
+       std::cout << "   IN: ";
         for (int in : graph.getVerticesIn(vertex)) {
-            cout << in << " ";
-        } cout << endl;
+           std::cout << in << " ";
+        }std::cout << std::endl;
         //
-        cout << "   OUT: ";
+       std::cout << "   OUT: ";
         for (int out : graph.getVerticesOut(vertex)) {
-            cout << out << " ";
-        } cout << endl;
+           std::cout << out << " ";
+        }std::cout << std::endl;
         iter.next();
-    } cout << endl;
+    }std::cout << std::endl;
     //
     iter.first();
-    cout << "Edges: "<< endl;
+   std::cout << "Edges: "<< std::endl;
     while (iter.valid()) {
         int vertex = iter.getCurrent();
         for (int out : graph.getVerticesOut(vertex)) {
-            cout << vertex << "->" << out << " (cost: " << graph.getCost(vertex, out) << ")" << endl;
+           std::cout << vertex << "->" << out << " (cost: " << graph.getCost(vertex, out) << ")" << std::endl;
         }
         iter.next();
     }
@@ -195,18 +243,18 @@ void testGraphFile(const std::string& filename) {
     int n, m;
     fin >> n >> m;
 
-    std::cout << "Adding vertices..." << endl;
+    std::cout << "Adding vertices..." << std::endl;
     for (int i = 0; i < n; i++) graph.addVertex(i);
-    std::cout << "Done adding vertices!" << endl;
+    std::cout << "Done adding vertices!" << std::endl;
 
     for (int i = 0; i < m; i++) {
         int from, to, cost;
         fin >> from >> to >> cost;
         graph.addEdge(from, to, cost);
-        std::cout << "Adding edge: " << from << " " << to << endl;
+        std::cout << "Adding edge: " << from << " " << to << std::endl;
     }
 
-    std::cout << "Loaded graph in memory." << endl << endl;
+    std::cout << "Loaded graph in memory." << std::endl << std::endl;
     std::cout << "Elapsed time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC;
     //testPrintGraph(&graph);
 }
