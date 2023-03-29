@@ -89,12 +89,18 @@ bool Graph::fromFile(const std::string &filename) {
     int n, m;
     fin >> n >> m;
 
-    for (int i = 0; i < n; i++) this->addVertex(i);
-
     for (int i = 0; i < m; i++) {
         int from, to, cost;
-        fin >> from >> to >> cost;
-        this->addEdge(from, to, cost);
+        fin >> from >> to;
+
+        if (!isVertex(from)) addVertex(from); // register
+
+        if (to < 0) continue; // edge case - no vIn and vOut
+        if (!isVertex(to)) addVertex(to); // else register
+
+        fin >> cost;
+
+        this->addEdge(from, to, cost); // add edge
     }
 
     return true;
@@ -105,10 +111,19 @@ bool Graph::toFile(const std::string &filename) {
 
     fout << this->vertexIn.size() << " " << this->edgeCost.size() << std::endl;
 
-    for (const auto &edgeCostPair : edgeCost) {
-        auto edge = edgeCostPair.first;
-        auto cost = edgeCostPair.second;
-        fout << edge.first << " " << edge.second << " " << cost << std::endl;
+    for (const auto &vertexOutPair : vertexOut) {
+        auto vertex = vertexOutPair.first;
+        auto outVertices = vertexOutPair.second;
+
+        if (outVertices.empty() && vertexIn[vertex].empty()) {
+            fout << vertex << " " << -1 << std::endl; // edge case - no vIn and vOut
+        }
+
+        // add all associated out edges
+        for (int outVertex : outVertices) {
+            fout << vertex << " " << outVertex << " " << edgeCost[std::pair<int, int>(vertex, outVertex)]
+            << std::endl;
+        }
     }
 
     return true;
@@ -147,7 +162,7 @@ void GraphIterator::next() {
     currentVertex = it->first;
 }
 
-int GraphIterator::getCurrent() {
+int GraphIterator::getCurrent() const {
     if (!valid()) throw std::exception();
     return currentVertex;
 }

@@ -47,7 +47,7 @@ class GraphIterator {
     public:
     void first();
     void next();
-    int getCurrent();
+    int getCurrent() const;
     [[nodiscard]] bool valid() const;
 };
 
