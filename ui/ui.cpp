@@ -18,7 +18,8 @@ void ui::print_all_commands() {
     std::cout << "random (vertices) (edges) - Randomize a graph. (NOTE: might take a while)" << std::endl;
     std::cout << "modify addV/remV (index) || addE (from) (to) (cost) || remE (from) (to) - Modifies graph."
     << std::endl;
-    std::cout << "peek isV (index) || isE (from) (to) || costOf (from) (to) - Peeks (safely) into graph data."
+    std::cout << "peek isV (index) || isE (from) (to) || costOf (from) (to) || vIn || vOut || edgeCost "
+                 "- Peeks (safely) into graph data."
     << std::endl;
     std::cout << "print - Print the entire parsed graph (NOTE: might take a while)" << std::endl << std::endl;
     std::cout << "exit - See you later!" << std::endl;
@@ -130,6 +131,44 @@ std::string ui::peek_command(std::string *args) {
         int from = stoi(args[2]);
         int to = stoi(args[3]);
         return graph.isEdge(from, to) ? "Cost: " + std::to_string(graph.getCost(from, to)) : "Not an edge.";
+    } else if (args[1] == "vIn") {
+        GraphIterator iter = graph.iterator();
+        iter.first();
+        while (iter.valid()) {
+            int vertex = iter.getCurrent();
+            std::cout << vertex << ": [ ";
+            for (int in: graph.getVerticesIn(vertex)) {
+                std::cout << in << " ";
+            }
+            std::cout << "] " << std::endl;
+            iter.next();
+        }
+        return "Printed vertex inbound data.";
+    } else if (args[1] == "vOut") {
+        GraphIterator iter = graph.iterator();
+        iter.first();
+        while (iter.valid()) {
+            int vertex = iter.getCurrent();
+            std::cout << vertex << ": [ ";
+            for (int out: graph.getVerticesOut(vertex)) {
+                std::cout << out << " ";
+            }
+            std::cout << "] " << std::endl;
+            iter.next();
+        }
+        return "Printed vertex outbound data.";
+    } else if (args[1] == "edgeCost") {
+        GraphIterator iter = graph.iterator();
+        iter.first();
+        while (iter.valid()) {
+            int vertex = iter.getCurrent();
+            for (int out: graph.getVerticesOut(vertex)) {
+                std::cout << "<" << vertex << ", " << out << "> " << graph.getCost(vertex, out);
+                std::cout << std::endl;
+            }
+            iter.next();
+        }
+        return "Printed vertex outbound data.";
     }
     return "Invalid use. Please try again";
 }
