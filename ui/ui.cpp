@@ -40,8 +40,10 @@ void ui::parse_args(const std::string& raw_command, std::string *into_where) {
 // COMMAND IMPLEMENTATION
 
 std::string ui::read_command(std::string *args) {
+    const clock_t begin_time = clock(); // track time
     if (graph.fromFile(args[1])) {
-        return "Successfully opened file.";
+        float end_time = float(clock() - begin_time) /  CLOCKS_PER_SEC;
+        return "Successfully opened file in " + std::to_string(end_time) + "s.";
     } else {
         return "Failed to open file. Did you specify a valid file?";
     }
