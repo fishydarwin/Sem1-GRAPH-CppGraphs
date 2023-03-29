@@ -16,7 +16,8 @@ void ui::print_all_commands() {
     << std::endl;
     std::cout << "write (filename) - Writes graph to a file (CAREFUL: will overwrite the file!)" << std::endl;
     std::cout << "random (vertices) (edges) - Randomize a graph. (NOTE: might take a while)" << std::endl;
-    std::cout << "modify addV/remV (index) || addE (from) (to) (cost) || remE (from) (to) - Modifies graph."
+    std::cout << "modify addV/remV (index) || addE (from) (to) (cost) || remE (from) (to) || modE (from) (to) (cost)"
+                 "- Modifies graph."
     << std::endl;
     std::cout << "peek isV (index) || isE (from) (to) || costOf (from) (to) || vIn || vOut || edgeCost "
                  "- Peeks (safely) into graph data."
@@ -112,6 +113,17 @@ std::string ui::modify_command(std::string *args) {
         int to = stoi(args[3]);
         if (graph.removeEdge(from, to)) {
             return "Removed edge successfully!";
+        } else {
+            return "This edge does not yet exist!";
+        }
+    } else if (args[1] == "modE") {
+        int from = stoi(args[2]);
+        int to = stoi(args[3]);
+        int cost = stoi(args[4]);
+        if (graph.isEdge(from, to)) {
+            graph.removeEdge(from, to);
+            graph.addEdge(from, to, cost);
+            return "Modified edge successfully!";
         } else {
             return "This edge does not yet exist!";
         }
