@@ -89,24 +89,38 @@ bool Graph::fromFile(const std::string &filename) {
     int n, m;
     fin >> n >> m;
 
+    int vertices = 0;
+
     for (int i = 0; i < m; i++) {
         int from, to, cost;
         fin >> from >> to;
 
-        if (!isVertex(from)) addVertex(from); // register
+        if (!isVertex(from)) {
+            addVertex(from); // register
+            vertices++;
+        }
 
         if (to < 0) continue; // edge case - no vIn and vOut
-        if (!isVertex(to)) addVertex(to); // else register
+        if (!isVertex(to)) {
+            addVertex(to); // else register
+            vertices++;
+        }
 
         fin >> cost;
 
         this->addEdge(from, to, cost); // add edge
     }
 
+    if (vertices < n) { // cheap hack, too bad
+        for (int i = 0; i < n; i++) {
+            if (!isVertex(i)) addVertex(i);
+        }
+    }
+
     return true;
 }
 
-bool Graph::toFile(const std::string &filename) {
+bool Graph::toFile(const std::string &filename, bool ignoreEmpty) {
     std::ofstream fout(filename);
 
     fout << this->vertexIn.size() << " " << this->edgeCost.size() << std::endl;
@@ -115,8 +129,10 @@ bool Graph::toFile(const std::string &filename) {
         auto vertex = vertexOutPair.first;
         auto outVertices = vertexOutPair.second;
 
-        if (outVertices.empty() && vertexIn[vertex].empty()) {
-            fout << vertex << " " << -1 << std::endl; // edge case - no vIn and vOut
+        if (!ignoreEmpty) {
+            if (outVertices.empty() && vertexIn[vertex].empty()) {
+                fout << vertex << " " << -1 << std::endl; // edge case - no vIn and vOut
+            }
         }
 
         // add all associated out edges

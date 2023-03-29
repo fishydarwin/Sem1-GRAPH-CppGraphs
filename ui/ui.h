@@ -19,7 +19,7 @@ private:
     std::string random_command(std::string args[100]);
     std::string modify_command(std::string args[100]);
     std::string peek_command(std::string args[100]);
-    std::string print_command(std::string args[100]);
+    std::string print_command();
 
 public:
     ui();

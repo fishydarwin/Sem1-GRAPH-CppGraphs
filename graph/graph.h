@@ -30,7 +30,7 @@ class Graph {
     [[nodiscard]] GraphIterator iterator() const;
 
     bool fromFile(const std::string& filename);
-    bool toFile(const std::string& filename);
+    bool toFile(const std::string& filename, bool ignoreEmpty);
 
     void print();
 };
