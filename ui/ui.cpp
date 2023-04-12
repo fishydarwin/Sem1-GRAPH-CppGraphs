@@ -292,7 +292,7 @@ std::string ui::search_command(std::string *args) {
                 if (foundAll.find(vertex) != foundAll.end()) { iter.next(); continue; } // skip found...
 
                 auto found = graphTraverser.breadthFirstSearch(vertex); // grab via bfs
-                Graph component;
+                Graph component; // required for correct storage, actually
                 std::cout << "Component #" << i << " [";
                 for (const auto &mapPair : std::get<1>(found)) {
                     auto who = mapPair.first;

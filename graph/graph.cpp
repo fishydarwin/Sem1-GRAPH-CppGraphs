@@ -161,7 +161,6 @@ bool Graph::toFile(const std::string &filename) {
     }
 
     if (hasDiscontinuities) {
-        std::cout << foundLostNodes << std::endl;
         int i = 0;
         bool maybeLucky = true;
         while (notLost.size() + foundLostNodes < totalNodes) {
