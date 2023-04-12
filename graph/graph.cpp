@@ -5,6 +5,7 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <set>
 #include "graph.h"
 
 Graph::Graph() {
@@ -91,7 +92,7 @@ bool Graph::fromFile(const std::string &filename) {
 
     int vertices = 0;
 
-    for (int i = 0; i < m; i++) {
+    while (!fin.eof()) {
         int from, to, cost;
         fin >> from >> to;
 
@@ -113,32 +114,64 @@ bool Graph::fromFile(const std::string &filename) {
 
     if (vertices < n) { // cheap hack, too bad
         for (int i = 0; i < n; i++) {
-            if (!isVertex(i)) addVertex(i);
+            if (!isVertex(i)) {
+                addVertex(i);
+                vertices++;
+            }
+            if (vertices >= n) break;
         }
     }
 
     return true;
 }
 
-bool Graph::toFile(const std::string &filename, bool ignoreEmpty) {
+bool Graph::toFile(const std::string &filename) {
     std::ofstream fout(filename);
 
-    fout << this->vertexIn.size() << " " << this->edgeCost.size() << std::endl;
+    int totalNodes = (int) vertexIn.size();
+    fout << totalNodes << " " << this->edgeCost.size() << std::endl;
+
+    bool hasDiscontinuities = false;
+    int foundLostNodes = 0;
+    std::set<int> notLost = std::set<int>();
 
     for (const auto &vertexOutPair : vertexOut) {
         auto vertex = vertexOutPair.first;
         auto outVertices = vertexOutPair.second;
 
-        if (!ignoreEmpty) {
+        if (vertex >= totalNodes) hasDiscontinuities = true;
+
+        if (vertex >= totalNodes) { // we ignore if less than n-1 because cheap hack saves us
             if (outVertices.empty() && vertexIn[vertex].empty()) {
                 fout << vertex << " " << -1 << std::endl; // edge case - no vIn and vOut
+                notLost.insert(vertex);
             }
+        } else if (hasDiscontinuities) {
+            if (outVertices.empty() && vertexIn[vertex].empty())
+                foundLostNodes++;
         }
 
         // add all associated out edges
         for (int outVertex : outVertices) {
             fout << vertex << " " << outVertex << " " << edgeCost[std::pair<int, int>(vertex, outVertex)]
             << std::endl;
+            notLost.insert(vertex);
+            notLost.insert(outVertex);
+        }
+    }
+
+    if (hasDiscontinuities) {
+        std::cout << foundLostNodes << std::endl;
+        int i = 0;
+        bool maybeLucky = true;
+        while (notLost.size() + foundLostNodes < totalNodes) {
+            if (maybeLucky && isVertex(i)) { i++; foundLostNodes++; continue; }
+            maybeLucky = false;
+            if (isVertex(i)) {
+                fout << i << " " << -1 << std::endl; // recover lost nodes
+                foundLostNodes++;
+            }
+            i++;
         }
     }
 

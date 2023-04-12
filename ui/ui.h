@@ -9,7 +9,7 @@
 class ui {
 
 private:
-    Graph graph;
+    Graph *graph;
 
     static void print_all_commands();
     static void parse_args(const std::string& raw_command, std::string into_where[100]);
@@ -20,6 +20,7 @@ private:
     std::string modify_command(std::string args[100]);
     std::string peek_command(std::string args[100]);
     std::string print_command();
+    std::string search_command(std::string args[100]);
 
 public:
     ui();

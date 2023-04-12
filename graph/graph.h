@@ -10,8 +10,8 @@ class GraphIterator;
 
 class Graph {
     friend class GraphIterator;
-
-    private:
+    
+    protected:
     std::map<int, std::vector<int>> vertexIn;
     std::map<int, std::vector<int>> vertexOut;
     std::map<std::pair<int, int>, int> edgeCost;
@@ -21,16 +21,18 @@ class Graph {
     bool isVertex(int who);
     bool addVertex(int who);
     bool isEdge(int from, int to);
-    bool addEdge(int from, int to, int cost);
+
+    virtual bool addEdge(int from, int to, int cost);
     int getCost(int from, int to);
-    bool removeEdge(int from, int to);
+
+    virtual bool removeEdge(int from, int to);
     bool removeVertex(int who);
     std::vector<int> getVerticesOut(int from);
     std::vector<int> getVerticesIn(int to);
     [[nodiscard]] GraphIterator iterator() const;
 
-    bool fromFile(const std::string& filename);
-    bool toFile(const std::string& filename, bool ignoreEmpty);
+    virtual bool fromFile(const std::string& filename);
+    bool toFile(const std::string& filename);
 
     void print();
 };
@@ -47,7 +49,7 @@ class GraphIterator {
     public:
     void first();
     void next();
-    int getCurrent() const;
+    [[nodiscard]] int getCurrent() const;
     [[nodiscard]] bool valid() const;
 };
 
