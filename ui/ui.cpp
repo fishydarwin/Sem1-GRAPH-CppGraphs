@@ -334,29 +334,20 @@ std::string ui::search_command(std::string *args) {
         if (algo == "mtxMul") {
 
             auto result = graphTraverser.allPairsShortestPath(true, x, y);
-            for (int i = 0; i < graph->nodeCount(); i++) {
-                for (int j = 0; j < graph->nodeCount(); j++) {
-                    std::cout << result.first[i][j] << " ";
+
+            if (result.second.empty())
+                std::cout << "No path was found from x = " << x << " to y = " << y << "." << std::endl;
+            else {
+                if (result.second[0] == -1) {
+                    std::cout << "There is a negative cycle in this graph; a path could not be found." << std::endl;
+                } else {
+                    std::cout << "Found minimum cost path: " << std::endl;
+                    for (int node : result.second) {
+                        std::cout << node << " ";
+                    }
+                    std::cout << std::endl;
                 }
-                std::cout << std::endl;
             }
-            std::cout << std::endl;
-            // just test...
-            for (auto i : result.second)
-                std::cout << i << " ";
-//            if (result.second.empty())
-//                std::cout << "No path was found from x = " << x << " to y = " << y << "." << std::endl;
-//            else {
-//                if (result[0] == -1) {
-//                    std::cout << "There is a negative cycle in this graph; a path could not be found." << std::endl;
-//                } else {
-//                    std::cout << "Found minimum cost path: " << std::endl;
-//                    for (int node : result) {
-//                        std::cout << node << " ";
-//                    }
-//                    std::cout << std::endl;
-//                }
-//            }
 
             std::cout << std::endl;
             return "Completed operation.";

@@ -19,6 +19,7 @@ private:
     Graph graph;
 
     matrix apspExtend(matrix D, matrix W, std::vector<std::vector<int>> &paths);
+    std::vector<int> apspGetPath(std::vector<std::vector<int>>& paths, int x, int y);
 
 public:
     explicit GraphTraverser(Graph graph);
@@ -27,6 +28,4 @@ public:
         breadthFirstSearch(int startNode);
 
     std::pair<matrix, std::vector<int>> allPairsShortestPath(bool printVerbose, int x, int y);
-
-    std::vector<int> getPath(std::vector<std::vector<int>>& paths, int x, int y);
 };
