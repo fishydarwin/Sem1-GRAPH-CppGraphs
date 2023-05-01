@@ -32,9 +32,12 @@ class Graph {
     [[nodiscard]] GraphIterator iterator() const;
 
     virtual bool fromFile(const std::string& filename);
-    bool toFile(const std::string& filename);
+    virtual bool toFile(const std::string& filename);
 
     void print();
+
+    int nodeCount();
+    int edgeCount();
 };
 
 class GraphIterator {

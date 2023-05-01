@@ -2,10 +2,12 @@
 // Created by Rares Bozga on 15.03.2023.
 //
 
+#include "undirectedgraph.h"
 #include <vector>
 #include <iostream>
 #include <fstream>
-#include "undirectedgraph.h"
+#include <set>
+#include <utility>
 
 bool UndirectedGraph::addEdge(int from, int to, int cost) {
     if (isEdge(from, to)) return false;
@@ -33,6 +35,65 @@ bool UndirectedGraph::removeEdge(int from, int to) {
     vertexOut[to].erase(std::find(vertexOut[to].begin(), vertexOut[to].end(), from));
     edgeCost.erase(std::pair<int, int>(to, from));
     //
+    return true;
+}
+
+bool UndirectedGraph::toFile(const std::string &filename) {
+    std::ofstream fout(filename);
+
+    int totalNodes = (int) vertexIn.size();
+    fout << totalNodes << " " << this->edgeCost.size() << std::endl;
+
+    std::set<std::pair<int,int>> alreadyVisited = std::set<std::pair<int,int>>();
+
+    bool hasDiscontinuities = false;
+    int foundLostNodes = 0;
+    std::set<int> notLost = std::set<int>();
+
+    for (const auto &vertexOutPair : vertexOut) {
+        auto vertex = vertexOutPair.first;
+        auto outVertices = vertexOutPair.second;
+
+        if (vertex >= totalNodes) hasDiscontinuities = true;
+
+        if (vertex >= totalNodes) { // we ignore if less than n-1 because cheap hack saves us
+            if (outVertices.empty() && vertexIn[vertex].empty()) {
+                fout << vertex << " " << -1 << std::endl; // edge case - no vIn and vOut
+                notLost.insert(vertex);
+            }
+        } else if (hasDiscontinuities) {
+            if (outVertices.empty() && vertexIn[vertex].empty())
+                foundLostNodes++;
+        }
+
+        // add all associated out edges
+        for (int outVertex : outVertices) {
+            if (alreadyVisited.find(std::pair<int, int>(vertex, outVertex)) != alreadyVisited.end())
+                continue;
+            if (alreadyVisited.find(std::pair<int, int>(outVertex, vertex)) != alreadyVisited.end())
+                continue;
+            fout << vertex << " " << outVertex << " " << edgeCost[std::pair<int, int>(vertex, outVertex)]
+                 << std::endl;
+            notLost.insert(vertex);
+            notLost.insert(outVertex);
+            alreadyVisited.insert(std::pair<int, int>(vertex, outVertex));
+        }
+    }
+
+    if (hasDiscontinuities) {
+        int i = 0;
+        bool maybeLucky = true;
+        while (notLost.size() + foundLostNodes < totalNodes) {
+            if (maybeLucky && isVertex(i)) { i++; foundLostNodes++; continue; }
+            maybeLucky = false;
+            if (isVertex(i)) {
+                fout << i << " " << -1 << std::endl; // recover lost nodes
+                foundLostNodes++;
+            }
+            i++;
+        }
+    }
+
     return true;
 }
 

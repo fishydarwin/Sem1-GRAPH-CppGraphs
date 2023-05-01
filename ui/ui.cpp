@@ -28,7 +28,7 @@ void ui::print_all_commands() {
                  "Peeks (safely) into graph data."
     << std::endl;
     std::cout << "print - Print the entire parsed graph (NOTE: might take a while)" << std::endl;
-    std::cout << "search (algorithm: BFS) (for: connComps) - Search for properties in "
+    std::cout << "search (bfs connComps/mtxMul lowCostWalk) - Search for properties in "
                  "a graph using a certain algorithm." << std::endl;
     std::cout << std::endl;
     std::cout << "exit - See you later!" << std::endl;
@@ -263,6 +263,7 @@ std::string ui::print_command() {
 std::string ui::search_command(std::string *args) {
     std::string algo = "none";
     if (args[1] == "bfs") algo = "bfs";
+    else if (args[1] == "mtxMul") algo = "mtxMul";
     if (algo == "none") return "Unknown algorithm.";
 
     if (args[2] == "connComps") {
@@ -304,7 +305,7 @@ std::string ui::search_command(std::string *args) {
                     for (int in : graph->getVerticesIn(who))
                         component.addEdge(in, who, graph->getCost(in, who));
                     for (int out : graph->getVerticesIn(who))
-                        component.addEdge(out, who, graph->getCost(out, who));
+                        component.addEdge(who, out, graph->getCost(who, out));
 
                 }
                 std::cout << " ]" << std::endl;
@@ -318,7 +319,50 @@ std::string ui::search_command(std::string *args) {
             std::cout << std::endl;
 
             return "Printed all connected components.";
+        } else {
+            return "Unimplemented operation.";
         }
+    }
+    else if (args[2] == "lowCostWalk") {
+
+        GraphTraverser graphTraverser = GraphTraverser(*graph);
+
+        int x, y;
+        std::cout << "Please enter the start and target vertices:" << std::endl;
+        std::cin >> x >> y;
+
+        if (algo == "mtxMul") {
+
+            auto result = graphTraverser.allPairsShortestPath(true, x, y);
+            for (int i = 0; i < graph->nodeCount(); i++) {
+                for (int j = 0; j < graph->nodeCount(); j++) {
+                    std::cout << result.first[i][j] << " ";
+                }
+                std::cout << std::endl;
+            }
+            std::cout << std::endl;
+            // just test...
+            for (auto i : result.second)
+                std::cout << i << " ";
+//            if (result.second.empty())
+//                std::cout << "No path was found from x = " << x << " to y = " << y << "." << std::endl;
+//            else {
+//                if (result[0] == -1) {
+//                    std::cout << "There is a negative cycle in this graph; a path could not be found." << std::endl;
+//                } else {
+//                    std::cout << "Found minimum cost path: " << std::endl;
+//                    for (int node : result) {
+//                        std::cout << node << " ";
+//                    }
+//                    std::cout << std::endl;
+//                }
+//            }
+
+            std::cout << std::endl;
+            return "Completed operation.";
+
+        }
+
     }
 
     return "Invalid use. Please try again";

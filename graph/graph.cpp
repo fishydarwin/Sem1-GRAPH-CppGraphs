@@ -187,6 +187,14 @@ void Graph::print() {
     }
 }
 
+int Graph::nodeCount() {
+    return (int) vertexIn.size();
+}
+
+int Graph::edgeCount() {
+    return (int) edgeCost.size();
+}
+
 // ITERATOR
 GraphIterator::GraphIterator(const Graph &gf) : graph(gf)
 {
