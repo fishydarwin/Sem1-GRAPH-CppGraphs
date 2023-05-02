@@ -346,6 +346,7 @@ std::string ui::search_command(std::string *args) {
                         std::cout << node << " ";
                     }
                     std::cout << std::endl;
+                    std::cout << "Total cost of path: " << result.first[x][y] << std::endl;
                 }
             }
 

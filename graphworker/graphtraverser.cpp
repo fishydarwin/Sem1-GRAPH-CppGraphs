@@ -74,7 +74,7 @@ std::pair<matrix, std::vector<int>> GraphTraverser::allPairsShortestPath(bool pr
     vector<vector<int>> paths;
     paths.resize(n, vector<int>(n, -1)); // initialize paths with -1 as the default value
     for (int i = 0; i < graph.nodeCount(); i++) {
-        for (int j : graph.getVerticesOut(i)) {
+        for (int j : graph.getVerticesOut(i)) { // if path exists, then put J as the initial best target.
             paths[i][j] = j;
         }
     }
@@ -82,13 +82,13 @@ std::pair<matrix, std::vector<int>> GraphTraverser::allPairsShortestPath(bool pr
     for (int i = 0; i < n; i++) // fill up W matrix, aka D^1
         for (int j = 0; j < n; j++) {
             if (i == j) {
-                W[i][j] = 0;
+                W[i][j] = 0; // if i == j, then 0
                 continue;
             }
-            if (graph.isEdge(i, j)) {
+            if (graph.isEdge(i, j)) { // if edge exists, then the cost
                 W[i][j] = graph.getCost(i, j);
             } else {
-                W[i][j] = COST_INFINITY;
+                W[i][j] = COST_INFINITY; // if edge doesn't exist, then infinity
             }
         }
 
@@ -96,7 +96,7 @@ std::pair<matrix, std::vector<int>> GraphTraverser::allPairsShortestPath(bool pr
 
     for (int m = 2; m < n; m++) { // perform extending/matrix multiplication...
 
-        if (printVerbose) {
+        if (printVerbose) {  // Simply log output - nothing mysterious here
             std::cout << "D^" << m - 1 << std::endl;
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < n; j++)
@@ -112,13 +112,13 @@ std::pair<matrix, std::vector<int>> GraphTraverser::allPairsShortestPath(bool pr
             }
             std::cout << std::endl;
             std::cout << "= = = = = = = = = = = = = =" << std::endl;
-        }
+        } // end of logging
 
         D = apspExtend(D, W, paths); // D^m = extend(D^m-1, W)
 
     }
 
-    if (printVerbose) {
+    if (printVerbose) { // Simply log output - nothing mysterious here
         std::cout << "D^" << n - 1 << std::endl;
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++)
@@ -134,7 +134,7 @@ std::pair<matrix, std::vector<int>> GraphTraverser::allPairsShortestPath(bool pr
         }
         std::cout << std::endl;
         std::cout << "= = = = = = = = = = = = = =" << std::endl;
-    }
+    } // end of logging
 
     // negative cycles?
     for (int i = 0; i < n; i++)
@@ -147,14 +147,15 @@ std::pair<matrix, std::vector<int>> GraphTraverser::allPairsShortestPath(bool pr
 }
 
 matrix GraphTraverser::apspExtend(matrix D, matrix W, vector<vector<int>> &paths) {
-    matrix C = D;
+    matrix C = D; // copy matrix D upon C; note a std::move() may have worked better if implemented.
     for (int i = 0; i < graph.nodeCount(); i++)
         for (int j = 0; j < graph.nodeCount(); j++) {
             for (int k = 0; k < graph.nodeCount(); k++) {
-                if (C[i][j] > D[i][k] + W[k][j]) {
+                // we perform the matrix multiplication step here.
+                if (C[i][j] > D[i][k] + W[k][j]) { // new minimum found!
                     C[i][j] = D[i][k] + W[k][j];
-                    if (paths[i][k] != -1) {
-                        paths[i][j] = paths[i][k];
+                    if (paths[i][k] != -1) { // needed! otherwise will fill the matrix wrong.
+                        paths[i][j] = paths[i][k]; // we update our paths matrix accordingly.
                     }
                 }
             }
@@ -166,11 +167,11 @@ vector<int> GraphTraverser::apspGetPath(vector<vector<int>>& paths, int x, int y
     if (paths[x][y] == -1) {
         return {}; // No path exists from x to y
     } else {
-        vector<int> path = {x};
+        vector<int> path = {x}; // first node on path is start node
         while (x != y) {
-            x = paths[x][y];
+            x = paths[x][y]; // keep searching for next node until none left
             path.push_back(x);
         }
-        return path;
+        return path; // returned path
     }
 }
