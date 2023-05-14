@@ -175,3 +175,45 @@ vector<int> GraphTraverser::apspGetPath(vector<vector<int>>& paths, int x, int y
         return path; // returned path
     }
 }
+
+/**
+ * Using the provided directed graph, attempts to perform topological sorting.
+ *
+ * Returns a vector of the nodes in order, provided there is no cycle in the graph.
+ * If there is some cycle, will instead return a list with -1 as the first element.
+ */
+vector<int> GraphTraverser::topologicalSortPredecessor() {
+    vector<int> sorted = vector<int>();
+    vector<int> queue = vector<int>();
+    map<int, int> count = map<int, int>();
+
+    GraphIterator it = graph.iterator();
+    it.first();
+    while (it.valid()) {
+        int x = it.getCurrent();
+        count[x] = (int) graph.getVerticesIn(x).size();
+        if (count[x] == 0) {
+            queue.push_back(x);
+        }
+        it.next();
+    }
+
+    while (!queue.empty()) {
+        int x = queue[0];
+        queue.erase(queue.begin());
+        sorted.push_back(x);
+        for (int y : graph.getVerticesOut(x)) {
+            count[y] = count[y] - 1;
+            if (count[y] == 0) {
+                queue.push_back(y);
+            }
+        }
+    }
+
+    if (sorted.size() < graph.nodeCount()) {
+        sorted = vector<int>();
+        sorted.push_back(-1);
+    }
+
+    return sorted;
+}

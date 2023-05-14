@@ -28,4 +28,6 @@ public:
         breadthFirstSearch(int startNode);
 
     std::pair<matrix, std::vector<int>> allPairsShortestPath(bool printVerbose, int x, int y);
+
+    std::vector<int> topologicalSortPredecessor();
 };

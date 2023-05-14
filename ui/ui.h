@@ -5,6 +5,7 @@
 #pragma once
 
 #include "../graph/graph.h"
+#include "../activity/activity.h"
 
 class ui {
 
@@ -21,6 +22,15 @@ private:
     std::string peek_command(std::string args[100]);
     std::string print_command();
     std::string search_command(std::string args[100]);
+
+    // lab 4
+
+    vector<Activity> activities;
+
+    std::string activityRead_command(std::string args[100]);
+    std::string activityPeek_command(std::string args[100]);
+    std::string activitySort_command(std::string args[100]);
+    std::string activitySummary_command(std::string args[100]);
 
 public:
     ui();
