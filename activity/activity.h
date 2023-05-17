@@ -14,8 +14,7 @@ class Activity {
 public:
     int activityId;
     vector<int> requiredActivities;
-    tm startTime;
-    int durationMinutes;
+    int duration;
 
     Activity();
     string toString();

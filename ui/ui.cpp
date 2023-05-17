@@ -386,7 +386,6 @@ string ui::activityRead_command(string *args) {
     graph = new Graph();
     activities = vector<Activity>();
 
-    string dateTimeFormat = "%d.%m.%Y-%H:%M:%S";
     while (!fin.eof()) { // load file data
         int activityId, activityPreCount;
         fin >> activityId >> activityPreCount;
@@ -397,16 +396,12 @@ string ui::activityRead_command(string *args) {
             activityPre.push_back(x);
         }
 
-        tm activityStart {};
-        fin >> get_time(&activityStart, dateTimeFormat.c_str());
-
-        int durationMinutes; fin >> durationMinutes;
+        int duration; fin >> duration;
 
         auto activity = Activity();
         activity.activityId = activityId;
         activity.requiredActivities = activityPre;
-        activity.startTime = activityStart;
-        activity.durationMinutes = durationMinutes;
+        activity.duration = duration;
         activities.push_back(activity);
     }
 
@@ -456,67 +451,99 @@ string ui::activitySort_command(string *args) {
 
 string ui::activitySummary_command(std::string *args) {
 
-    std::time_t time_now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    cout << "Note that this function assumes a sorted activity list. Use activitySort first to ensure this."
+        << endl << endl;
 
-    int totalTime = 0;
-    for (Activity &activity : activities) {
+    // see explanations of these functions in "drum critic" word document
+    map<int, int> tm = map<int, int>(); // tm(v)
+    map<int, int> tsm = map<int, int>(); // t*m(v)
+    map<int, int> tM = map<int, int>(); // tM(v)
+    map<int, int> tsM = map<int, int>(); // t*M(v)
 
-        cout << "Activity #" << activity.activityId << " - ";
-        if (activity.requiredActivities.empty()) cout << "Has no prerequisites." << endl;
-        else {
-            cout << "Prerequisites: ";
-            for (const int &i : activity.requiredActivities)
-                cout << "#" << i << " ";
-            cout << endl;
-        }
+    // fictional nodes exist in our mind and in time maps.
+    // start node is denoted by "-1" in the graph
+    // end node is denoted by "-2" in the graph
+    // we use these negative values because it avoids collisions in the graph data
+    // of course, these are "false" activities only. they get destroyed after all of this.
+    Activity fictionalStartActivity = Activity();
+    fictionalStartActivity.activityId = -1;
+    fictionalStartActivity.duration = 0;
 
-        char bufferC[80];
-        strftime(bufferC, sizeof(bufferC), "%d.%m.%Y-%H:%M:%S", &(activity.startTime));
-        std::string earlyTimeString(bufferC);
-        cout << "Earliest Start Time: " << earlyTimeString << endl;
+    Activity fictionalEndActivity = Activity();
+    fictionalEndActivity.activityId = -2;
+    fictionalEndActivity.duration = 0;
 
-        // interpret "latest time" as the nearest time to prerequisite
-        tm latestTime{};
-        double latestTimeRef = 99999999999; // const known magic number
-        bool foundSomeTime = false;
-        for (Activity &dependentActivity : activities) { // O(n^2), best not to worry about it...
-            if (dependentActivity.activityId == activity.activityId) continue;
-            auto maybeReqMe = dependentActivity.requiredActivities;
-            if (std::find(maybeReqMe.begin(), maybeReqMe.end(), activity.activityId)
-                != maybeReqMe.end()) {
-                if (!foundSomeTime) {
-                    latestTime = dependentActivity.startTime;
-                    latestTimeRef = difftime(mktime(&latestTime), mktime(&(activity.startTime)));
-                    foundSomeTime = true;
-                }
-                else {
-                    double diffTime = difftime(mktime(&latestTime), mktime(&(activity.startTime)));
-                    if (diffTime < latestTimeRef) {
-                        latestTime = dependentActivity.startTime;
-                        latestTimeRef = diffTime;
-                    }
-                }
+    activities.insert(activities.begin(), fictionalStartActivity);
+    activities.push_back(fictionalEndActivity);
+
+    graph->addVertex(-1);
+    graph->addVertex(-2);
+
+    {
+        GraphIterator iter = graph->iterator();
+        iter.first();
+        while (iter.valid()) {
+            int who = iter.getCurrent();
+            if (who < 0) iter.next(); // skip -1, -2...
+
+            if (graph->getVerticesIn(who).empty()) { // start activity?
+                graph->addEdge(-1, who, 0);
+            } else if (graph->getVerticesOut(who).empty()) { // end activity?
+                graph->addEdge(who, -2, 0);
             }
+            iter.next();
         }
-        cout << "Latest Start Time: ";
-        if (foundSomeTime) {
-            strftime(bufferC, sizeof(bufferC), "%d.%m.%Y-%H:%M:%S", &(latestTime));
-            std::string lateTimeString(bufferC);
-            cout << lateTimeString;
-        } else {
-            cout << "None (no activity depends on this)";
-        }
-        cout << endl;
-
-        if (difftime(mktime(&(activity.startTime)), time_now) < 0) {
-            cout << "CRITICAL ACTIVITY! This activity should be worked on!" << endl;
-        }
-        cout << endl;
-
-        totalTime += activity.durationMinutes;
     }
 
-    cout << "Total duration of project: " << totalTime << " minutes" << endl;
+    // calculate earliest times...
+    tm[-1] = tsm[-1] = 0;
+    for (int n = 1; n < activities.size(); n++) {
+        int i = activities[n].activityId;
+        // find the earliest start time
+        tm[i] = 0;
+        for (int predecessor : graph->getVerticesIn(i)) {
+            if (tsm[predecessor] > tm[i]) tm[i] = tsm[predecessor]; // max...
+        }
+        // find the earliest end time
+        tsm[i] = tm[i] + activities[n].duration;
+    }
+
+    // calculate latest times...
+    tsM[-2] = tM[-2] = tsm[-2];
+    for (int n = (int) (activities.size()) - 2; n >= 0; n--) {
+        int i = activities[n].activityId;
+        // find the latest end time
+        tsM[i] = 9999999; // some arbitrarily large value
+        for (int successor : graph->getVerticesOut(i)) {
+            if (tM[successor] < tsM[i]) tsM[i] = tM[successor];  // min
+        }
+        // find the latest start time
+        tM[i] = tsM[i] - activities[n].duration;
+    }
+
+    // any calculated time of the latest fictional activity is the minimum execution time
+    int minimumExecutionTime = tm[-2];
+
+    // destroy the extra fictional data
+    graph->removeVertex(-1);
+    graph->removeVertex(-2);
+    activities.erase(activities.begin());
+    activities.pop_back();
+
+    // print activities based on calculated data
+    for (Activity activity : activities) {
+        cout << activity.toString() << endl;
+        if (tm[activity.activityId] == tM[activity.activityId]) {
+            cout << "Critical Activity!" << endl;
+            cout << "Must be started at time: " << tm[activity.activityId] << endl;
+        } else {
+            cout << "Earliest Start: " << tm[activity.activityId] <<
+                    "; Latest Start: " << tM[activity.activityId] << endl;
+        }
+        cout << endl;
+    }
+    cout << "Minimum execution time: " << minimumExecutionTime << endl << endl;
+
     return "Completed summary analysis.";
 }
 
